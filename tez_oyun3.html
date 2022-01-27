@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+
+        function load() {
+            var canvas = document.createElement("canvas");
+            var context = canvas.getContext("2d");
+            canvas.width = 1090;
+            canvas.height = 416;
+            var onyikama_clicked = false
+            document.body.appendChild(canvas);
+         
+                context.shadowColor = "red";
+                        context.shadowBlur = 3;
+                        context.lineWidth = 2;
+
+            canvas.addEventListener('click', function (event) {
+                var mousePos = getMousePos(canvas, event);
+
+                var roundMove = false;
+                if (isInside(mousePos, rect_round) || isInside(mousePos, rect_forward)) {
+                    roundMove = true;
+
+                    angleInDegrees = (angleInDegrees + 22.5) % 360;
+                }
+                else if (isInside(mousePos, rect_backward)) {
+                    roundMove = true;
+
+                    angleInDegrees = angleInDegrees - 22.5;
+                    if (angleInDegrees < 0)
+                        angleInDegrees = angleInDegrees + 360.0;
+                }
+
+                if (roundMove) {
+
+                    if (machine_mod.hasOwnProperty(angleInDegrees))
+                        mod = machine_mod[angleInDegrees]
+
+                    else
+                        mod = ""
+
+                    if (mod == "")
+                        current_settings = null
+                    else
+                        current_settings = get_mod_defaults(mod)
+                }
+                if (isInside(mousePos, button_sicaklik)) {
+
+                    current_settings = change_temperature(mod, current_settings)
+                    console.log("sicaklik click " + current_settings)
+                }
+                else if (isInside(mousePos, button_sikma)) {
+                    current_settings = change_slkma(mod, current_settings)
+                    console.log("sýkma click " + current_settings)
+                }
+                else if (isInside(mousePos, button_onyikama) ) {
+                    if (onyikama_clicked == false) {
+                        onyikama_clicked = true
+                        console.log("ön yýkama click ")
+                    }
+                    else {
+                          onyikama_clicked = false
+                        console.log("ön yýkama click false ")
+                    }
+                  
+                }
+                console.log(angleInDegrees + " " + mod + " " + current_settings)
+                load_draw(onyikama_clicked)
+            });
+
+            bg_loaded = false;
+            round_loaded = false;
+            var angleInDegrees = 0;
+            mod = ""
+            var current_settings;
+            // Modlarý belirlemeyi saðlýyor.  [sýcaklýk, sýkma, süre] belirleyip eklemeyi saðlýyor.
+            // Yani yeni deðer girip sýcaklýk süre ve sýkmayý buradan deðiþtirebilirsin.
+            my_dict = {
+                "Pamuklu": [
+                    [40, 600, 115],
+                    [40, 800, 115],
+                    [40, 1000, 125],
+                    [30, 600, 105],
+                    [30, 800, 115],
+                    [30, 1000, 125],
+                    [30, 1200, 125],
+                    [60, 600, 100],
+                    [60, 800, 110],
+                    [60, 600, 105],
+                    [90, 600, 98],
+                    [90, 800, 105],
+                    [90, 1000, 108],
+                    [90, 1200, 108]
+                ],
+                "Eko": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120],
+                    [90, 600, 98],
+                    [90, 800, 120],
+                    [90, 1000, 125],
+                    [90, 1200, 135]
+
+                ],
+                "Sentetik": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Gunluk": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Karma": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Yunlu": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Hassas": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Pompa": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Durulama": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Koyu": [
+
+                    [40, 600, 108],
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Perde": [
+
+
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Leke": [
+
+                    [40, 600, 118],
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Hijyen": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Yorgan": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [50, 1200, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Gomlek": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+                "Kapat": [
+                    [50, 600, 118],
+                    [50, 800, 115],
+                    [50, 1000, 118],
+                    [60, 600, 110],
+                    [60, 800, 120]
+                ],
+
+
+
+            }
+
+            // makine modlarýný ekleyip çýkarmayý saðlýyor. Açý deðerlerini deðiþtirip sýralamayý deðiþtirebilirsin
+            // örneðin pamukjluyu 5. sýrada alamk istediðinde buradan ayarlayacaksýn.
+            machine_mod = {
+                "22.5": "Pamuklu",
+                "45": "Eko",
+                "67.5": "Sentetik",
+                "90": "Gunluk",
+                "112.5": "Karma",
+                "135": "Yunlu",
+                "157.5": "Hassas",
+                "180": "Pompa",
+                "202.5": "Durulama",
+                "225": "Koyu",
+                "247.5": "Perde",
+                "270": "Leke",
+                "292.5": "Hijyen",
+                "315": "Yorgan",
+                "337.5": "Gomlek",
+                "360": "Kapat"
+
+
+            }
+
+            // rotate buttonun yerini belirler.buttonu saða sola çekersen buradaki x y degerlerini deðiþtirmelisin.
+            var rect_round = {
+                x: 176,
+                y: 95,
+                width: 146,
+                heigth: 146
+            };
+
+           // saða çevir buttonunun yerini belirler.buttonu saða sola çekersen buradaki x y degerlerini deðiþtirmelisin.
+            var rect_forward = {
+                x: 254,
+                y: 310,
+                width: 100,
+                heigth: 86
+            };
+
+            // sola çevir buttonunun yerini belirler.buttonu saða sola çekersen buradaki x y degerlerini deðiþtirmelisin.
+            var rect_backward = {
+                x: 128,
+                y: 310,
+                width: 100,
+                heigth: 86
+            };
+
+            // sýcaklýk buttonunun yerini belirler.buttonu saða sola çekersen buradaki x y degerlerini deðiþtirmelisin.
+            var button_sicaklik = {
+                x: 531,
+                y: 198,
+                width: 67,
+                heigth: 48
+            };
+
+           // sýkma buttonunun yerini belirler.buttonu saða sola çekersen buradaki x y degerlerini deðiþtirmelisin.
+            var button_sikma = {
+                x: 598,
+                y: 198,
+                width: 66,
+                heigth: 48
+            };
+
+
+            var button_onyikama = {
+                x: 665,
+                y: 198,
+                width: 66,
+                heigth: 48
+            };
+
+
+            var imageObj = new Image();
+            imageObj.src = 'makine_beyaz.png';
+
+            var imageObj2 = new Image();
+            imageObj2.src = 'round.png';
+
+            var imageObj3 = new Image();
+            imageObj3.src = 'sicaklik.jpg';
+
+            var imageObj4 = new Image();
+            imageObj3.src = 'sikma.jpg';
+
+            
+            function getMousePos(canvas, event) {
+                var rect = canvas.getBoundingClientRect();
+                return {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+            }
+
+            function isInside(pos, rect) {
+                return pos.x > rect.x && pos.x < rect.x + rect.width && pos.y < rect.y + rect.heigth && pos.y > rect.y
+            }
+
+            function get_mod_defaults(new_mod) {
+                return my_dict[new_mod][0]
+            }
+
+            function sort_unique(arr) {
+                if (arr.length === 0) return arr;
+                arr = arr.sort(function (a, b) { return a * 1 - b * 1; });
+                arr.reverse();
+                var ret = [arr[0]];
+                for (var i = 1; i < arr.length; i++) { //Start loop at 1: arr[0] can never be a duplicate
+                    if (arr[i - 1] !== arr[i]) {
+                        ret.push(arr[i]);
+                    }
+                }
+                return ret;
+            }
+
+            function get_unique_temperatures(current_mod) {
+                rowlist = []
+                all_settings = my_dict[current_mod]
+                all_settings.forEach(function (e) {
+                    rowlist.push(e[0])
+                });
+
+                return sort_unique(rowlist)
+
+            }
+
+            function get_unique_sikma(current_mod, current_temp) {
+                rowlist = []
+                all_settings = my_dict[current_mod]
+                all_settings.forEach(function (e) {
+                    if (e[0] == current_temp) {
+                        rowlist.push(e[1])
+                    }
+                });
+
+                return sort_unique(rowlist)
+
+            }
+
+
+
+            function change_temperature(current_mod, current_settings) {
+                current_temp = current_settings[0]
+                uniques = get_unique_temperatures(current_mod)
+                temp_unique = uniques.indexOf(current_temp) + 1
+
+                new_temp = uniques[temp_unique % uniques.length]
+
+                new_setting = [new_temp, current_settings[1]]
+
+                all_settings = my_dict[current_mod]
+                found_setting = []
+                for (let i = 0; i < all_settings.length; i++) {
+                    row = all_settings[i]
+                    //row = row.filter((month, idx) => idx < 2)
+                    //new_setting = new_setting.filter((month, idx) => idx < 2)
+                    //if (row == new_setting)
+                    if (row[0] == new_setting[0] && row[1] == new_setting[1])
+                        found_setting.push(row)
+
+                }
+
+                if (found_setting.length == 0) {
+                    //all_settings.forEach(function (e) {
+                    for (let e of all_settings) {
+                        if (e[0] == new_setting[0]) {
+                            new_setting = e;
+                            break
+                        }
+                    }
+                }
+                else {
+
+                    new_setting = found_setting[0]
+                }
+
+                return new_setting
+
+            }
+
+            function change_slkma(current_mod, current_settings) {
+                current_temp = current_settings[0]
+                current_sikma = current_settings[1]
+                uniques = get_unique_sikma(current_mod, current_temp)
+                new_sikma = uniques.indexOf(current_sikma) + 1
+
+                new_sikma = uniques[new_sikma % uniques.length]
+
+                new_setting = [current_temp, new_sikma]
+
+                all_settings = my_dict[current_mod]
+                found_setting = []
+                for (let i = 0; i < all_settings.length; i++) {
+                    row = all_settings[i]
+                    //row = row.filter((month, idx) => idx < 2)
+                    //new_setting = new_setting.filter((month, idx) => idx < 2)
+                    //if (row == new_setting)
+                    if (row[0] == new_setting[0] && row[1] == new_setting[1])
+                        found_setting.push(row);
+
+                }
+
+                if (found_setting.length == 0) {
+                    console.log("this is unexpected.")
+                    all_settings.forEach(function (e) {
+                        if (e[1] == new_setting[1])
+                            new_setting = e;
+                    });
+                }
+                else {
+
+                    new_setting = found_setting[0]
+                }
+                return new_setting
+
+            }
+
+
+
+
+            function drawRotated(degrees, ctx, rect) {
+                //ctx.clearRect(rect.x, rect.y, rect.width, rect.heigth);
+                ctx.save();
+
+                ctx.translate(rect.x + rect.width / 2, rect.y + rect.heigth / 2);
+                ctx.rotate(degrees * Math.PI / 180);
+                ctx.translate(-rect.x - rect.width / 2, -rect.y - rect.heigth / 2);
+
+                ctx.drawImage(imageObj2, 176, 95);
+
+                ctx.restore();
+            }
+
+            function load_draw(onyikama_clicked) {
+
+
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+
+                imageObj.onload = function () {
+                    bg_loaded = true;
+
+                    if (bg_loaded && round_loaded) {
+                        context.drawImage(imageObj, 10, 10);
+                        context.drawImage(imageObj2, 176, 95);
+
+
+                    }
+                };
+                imageObj2.onload = function () {
+                    round_loaded = true;
+
+                    if (bg_loaded && round_loaded) {
+                        context.drawImage(imageObj, 10, 10);
+                        context.drawImage(imageObj2, 176, 95);
+
+                    }
+                };
+
+
+                if (bg_loaded && round_loaded) {
+                    context.drawImage(imageObj, 10, 10);
+                }
+
+                drawRotated(angleInDegrees, context, rect_round);
+
+                if (mod == "")
+                    return
+
+
+                //renkleri context.fillStyle kýsmýný deðiþtirerek deðiþtirebilirsin.
+                // shadowColor gölge eklemek istersen 
+                // shadowColor lineWidth eklediðin gölgenin kallýðý ve alanýný gösterir.
+                // ilk if bloðu renkli aktif alaný temsil ediyor, else bloðu ise karanlýk gözükecek yerleri.
+                // context.font ile yazý tipi ve boyutu belirleniyor.
+                // context.fillText(temp, 554, 70 + k); bu kýsým text i ekrana yazmayý saðlýyor. 554 ekrandaki x deðeri
+                // context.fillText("kelime", x, y) anlamýuna geliyor. 
+                // 70 + k ise her alt alta yazma sýrasýnda k deðeri kadar ekleyerek boþluk koyuyor. k=k+20 k deðerini 20px ekleyip güncellemeyi temsil ediyor. 
+
+                k = 0;
+                temp_list = get_unique_temperatures(mod);
+                for (i = 0; i < temp_list.length; i++) {
+                    context.font = "16px  Verdana";
+                    temp = temp_list[i]
+                    if (temp == current_settings[0]) {
+                        context.fillStyle = "red";
+                        context.shadowColor = "red";
+                        context.shadowColor = 3;
+                        context.lineWidth = 2;
+                    
+                    }
+                    else {
+                        context.fillStyle = "black";
+                           context.shadowColor = "black";
+                        context.shadowBlur = 3;
+                        context.lineWidth = 2;
+
+                    }
+                    context.fillText(temp, 554, 70 + k);
+                    k = k + 20
+                }
+
+                k = 0;
+                sikma_list = get_unique_sikma(mod, current_settings[0])
+                for (i = 0; i < sikma_list.length; i++) {
+                    context.font = "16px  Verdana";
+                    sikma = sikma_list[i]
+                    if (sikma == current_settings[1]) {
+                        context.fillStyle = "#FF1020";
+                        context.shadowColor = "red";
+                        context.shadowBlur = 3;
+                        context.lineWidth = 2;
+                   
+                    }
+                    else {
+                        context.fillStyle = "black";
+                        context.shadowColor = "black";
+                        context.shadowBlur = 3;
+                        context.lineWidth = 2;
+                        
+                    }
+                    context.fillText(sikma, 605, 70 + k);
+                    k = k + 20
+                }
+
+
+                context.font = "30px Verdana";
+
+               sure = current_settings[2]
+                if (onyikama_clicked == true) {
+
+                    new_sure = parseInt(sure) + 15
+                 
+                }
+                else {
+                    new_sure = parseInt(sure)
+                }
+               
+                
+                var date = new Date(0);
+                date.setMinutes(new_sure); // specify value for SECONDS here
+                var timeString = date.toISOString().substr(11, 5);
+                context.fillStyle = "#FF1020";
+                       context.shadowColor = "red";
+                        context.shadowBlur = 3;
+                        context.lineWidth = 2;
+
+              
+                    
+                context.fillText(timeString, 680, 100);
+                
+
+               
+            }
+
+
+            load_draw(onyikama_clicked);
+        }
+
+
+
+
+
+
+    </script>
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css?family=Nova+Mono&display=swap');
+
+        @import url(https://fonts.googleapis.com/css?family=Roboto:400,700,900);
+
+        #machine {
+            background-color: #f1f1f1;
+        }
+
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            color: #ffffff;
+            text-align: center;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #daf6ff;
+            text-shadow: 0 0 20px rgba(10, 175, 230, 1), 0 0 20px rgba(10, 175, 230, 0);
+        }
+    </style>
+
+
+</head>
+
+<body onload="load()">
+
+    <!--<canvas width="1090" height="376" id="machine"></canvas>-->
+
+    <div>
+        <a href="test2.html">Sonraki</a>
+    </div>
+
+</body>
+
+
+</html>
+
